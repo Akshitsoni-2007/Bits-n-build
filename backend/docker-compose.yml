@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: nirikshan_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: nirikshan
+      MYSQL_USER: nirikshan
+      MYSQL_PASSWORD: nirikshan_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nirikshan_backend
+    environment:
+      DATABASE_URL: mysql+pymysql://nirikshan:nirikshan_pass@mysql:3306/nirikshan
+      CORS_ORIGINS: http://localhost:3000
+      LOG_LEVEL: INFO
+      # LLM provider (optional)
+      # LLM_API_KEY: ${LLM_API_KEY}
+      # LLM_BASE_URL: https://api.openai.com/v1
+      # LLM_MODEL: gpt-4o-mini
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./ml/artifacts:/app/ml/artifacts
+    # For development, you can mount source:
+    # volumes:
+    #   - .:/app
+
+volumes:
+  mysql_data:

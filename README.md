@@ -293,7 +293,7 @@ Possible upgrade:
 
 ## Database
 
--   PostgreSQL
+-   MySQL
 
 ## Optional AI Layer
 
