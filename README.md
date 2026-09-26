@@ -216,36 +216,18 @@ historical/model assumptions.
 # 🧠 System Architecture
 
 ``` text
-                         ┌──────────────────────┐
-                         │   FIR / Incident     │
-                         │        Data          │
-                         └──────────┬───────────┘
-                                    │
-                                    ▼
-                         ┌──────────────────────┐
-                         │ Data Processing &    │
-                         │ Validation           │
-                         └──────────┬───────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              │                     │                     │
-              ▼                     ▼                     ▼
-      ┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-      │   Analytics   │     │  Risk Model   │     │ Case Retrieval│
-      └───────┬───────┘     └───────┬───────┘     └───────┬───────┘
-              │                     │                     │
-              ▼                     ▼                     ▼
-      ┌────────────────────────────────────────────────────────┐
-      │                 Intelligence API                       │
-      │                       FastAPI                          │
-      └──────────────────────────┬─────────────────────────────┘
-                                 │
-                                 ▼
-      ┌────────────────────────────────────────────────────────┐
-      │                    Next.js Frontend                    │
-      │                                                        │
-      │ Command Center │ Risk Predictor │ DNA Matcher │ NL UI │
-      └────────────────────────────────────────────────────────┘
+Next.js Frontend
+        ↓
+FastAPI Backend
+        ↓
+SQLAlchemy
+        ↓
+MySQL
+
+┌─────────────────────────────────────────────────────────────┐
+│                  ML / LLM Services                         │
+│  (risk model, retrieval, embedding, LLM conversion)        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ------------------------------------------------------------------------
@@ -307,7 +289,7 @@ Possible upgrade:
 ``` text
 ksp-intelligence/
 │
-├── frontend/
+├── src/
 │   ├── app/
 │   │   ├── command-center/
 │   │   ├── risk-predictor/
@@ -317,6 +299,8 @@ ksp-intelligence/
 │   ├── components/
 │   ├── lib/
 │   └── package.json
+│
+├── public/
 │
 ├── backend/
 │   ├── app/
@@ -333,7 +317,12 @@ ksp-intelligence/
 │   │   └── retrieval.py
 │   │
 │   ├── data/
-│   └── requirements.txt
+│   ├── scripts/
+│   ├── tests/
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── Dockerfile
+│   └── docker-compose.yml
 │
 ├── database/
 │   ├── schema.sql
@@ -486,7 +475,7 @@ It should **not** claim:
 -   Obtain/prepare a suitable historical crime dataset.
 -   Clean missing and inconsistent values.
 -   Define database schema.
--   Load data into PostgreSQL.
+-   Load data into MySQL.
 -   Perform exploratory analysis.
 
 ## Phase 2 --- Command Center
