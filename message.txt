@@ -1,0 +1,860 @@
+We need to make two related changes to the current project.
+
+CHANGE 1:
+Replace the current MySQL/database-backed architecture with a CSV-backed
+data source for the hackathon MVP.
+
+CHANGE 2:
+Replace the current fictional "sector" geographic model with a real Indian
+State → City geographic model.
+
+IMPORTANT:
+Before changing anything, inspect the existing project and understand the
+current frontend API contract, backend implementation, mock data, schemas,
+ML services, and geographic filtering.
+
+Do not create a new architecture from scratch.
+Modify the existing implementation with the minimum necessary changes.
+
+============================================================
+PART 1 — CSV DATA SOURCE
+============================================================
+
+The MySQL database will NOT be used for the current hackathon MVP.
+
+The current architecture must become:
+
+Next.js Frontend
+       ↓
+FastAPI Backend
+       ↓
+CSV Dataset
+       ↓
+Pandas / in-memory data processing
+
+The backend must run without MySQL.
+
+The project should NOT require:
+
+- MySQL server
+- MySQL credentials
+- DATABASE_URL
+- PyMySQL
+- SQLAlchemy database sessions
+- database initialization
+- database seed commands
+
+Do not blindly delete database code.
+First inspect how it is currently used.
+
+If MySQL/SQLAlchemy becomes completely unused after this migration,
+remove the unnecessary dependencies and files.
+
+MySQL may be mentioned as a possible future production database, but it
+must not be required by the current MVP.
+
+============================================================
+1. CSV DATA SOURCE
+============================================================
+
+Create/use:
+
+backend/data/incidents.csv
+
+This CSV is now the source of truth for incident data.
+
+The FastAPI application should load the CSV once during application
+startup and keep the processed dataset in memory.
+
+DO NOT read the CSV from disk on every API request.
+
+Create a clean data-access/service layer, for example:
+
+backend/app/services/data_service.py
+
+The service should be responsible for:
+
+- loading the CSV
+- validating required columns
+- normalizing data types
+- filtering
+- pagination
+- aggregation
+- returning incident records
+
+Keep the service isolated from the API route handlers so that a database
+can potentially replace the CSV later without rewriting all API endpoints.
+
+============================================================
+2. EXISTING MOCK DATA
+============================================================
+
+Inspect:
+
+src/lib/mock-data.ts
+
+Use the existing mock incident records as the initial source for:
+
+backend/data/incidents.csv
+
+Convert the existing records reliably.
+
+Do NOT manually rewrite the records if they can be converted programmatically.
+
+Preserve existing:
+
+- IDs
+- dates
+- crime types
+- descriptions
+- locations
+- status
+- priority
+- other relevant fields
+
+Do not silently change the meaning of existing fields.
+
+If the existing mock data is clearly fictional/prototype data, keep it
+clearly as prototype data. Do not claim that fabricated records are
+real-world crime records.
+
+============================================================
+3. CSV SCHEMA
+============================================================
+
+Inspect all of the following before determining the CSV schema:
+
+src/lib/types.ts
+src/lib/api.ts
+src/lib/mock-data.ts
+
+Also inspect the existing backend schemas and services.
+
+The CSV must contain everything required for:
+
+- incident listing
+- summary statistics
+- risk prediction
+- DNA matcher
+- natural-language query
+- decision support
+- simulator
+
+Do not invent unnecessary fields.
+
+============================================================
+4. INCIDENT API
+============================================================
+
+Keep the existing API endpoints:
+
+GET  /api/incidents/summary
+GET  /api/incidents
+POST /api/risk/predict
+POST /api/dna-matcher/search
+POST /api/nl-query
+POST /api/decision-support/analyze
+POST /api/simulator/run
+
+Do not unnecessarily change the API paths.
+
+The frontend should continue communicating with the same endpoints.
+
+============================================================
+5. INCIDENT FILTERING
+============================================================
+
+GET /api/incidents should support:
+
+state
+city
+crime_type
+page
+page_size
+
+Examples:
+
+/api/incidents?state=Madhya%20Pradesh
+
+/api/incidents?state=Madhya%20Pradesh&city=Indore
+
+/api/incidents?state=Madhya%20Pradesh&city=Indore&crime_type=Theft
+
+GET /api/incidents/summary should support:
+
+state
+city
+crime_type
+
+Filtering must happen against the loaded CSV dataset.
+
+Support all cases:
+
+1. No geographic filter
+2. State only
+3. State + city
+4. Crime type only
+5. State + crime type
+6. State + city + crime type
+
+============================================================
+6. SUMMARY
+============================================================
+
+The summary endpoint must calculate its results from the actual CSV.
+
+Do NOT hardcode:
+
+- total incident count
+- crime distribution
+- state distribution
+- city distribution
+- time distribution
+
+All values must be derived from the loaded dataset.
+
+============================================================
+7. ML TRAINING
+============================================================
+
+The ML training pipeline must work without MySQL.
+
+Inspect:
+
+backend/ml/train/train_risk_model.py
+backend/ml/train/train_tfidf.py
+
+Both scripts must be able to use:
+
+backend/data/incidents.csv
+
+as their data source.
+
+Training must be separate from API requests.
+
+Do NOT train models on every API request.
+
+Store generated artifacts in:
+
+backend/ml/artifacts/
+
+For example:
+
+backend/ml/artifacts/risk_model.pkl
+backend/ml/artifacts/tfidf_vectorizer.pkl
+backend/ml/artifacts/label_encoders.pkl
+
+if those artifacts are actually required by the existing implementation.
+
+============================================================
+8. RISK MODEL
+============================================================
+
+Keep the existing ML algorithm and logic.
+
+Do NOT redesign the risk model.
+
+Only change its data source if necessary:
+
+OLD:
+Database / MySQL
+
+NEW:
+CSV → Pandas
+
+The model should continue to work with the existing frontend request
+and response contract.
+
+Do not change SHAP logic unless required by the geographic migration.
+
+============================================================
+9. TF-IDF DNA MATCHER
+============================================================
+
+Keep the existing TF-IDF + cosine similarity approach.
+
+The matcher should use incident descriptions from:
+
+backend/data/incidents.csv
+
+The vectorizer should be fitted separately and saved as an artifact.
+
+Runtime flow:
+
+CSV
+ ↓
+incident descriptions
+ ↓
+TF-IDF vectorizer
+ ↓
+cosine similarity
+ ↓
+Top-K matches
+
+Do not refit the vectorizer unnecessarily on every request.
+
+============================================================
+10. NATURAL LANGUAGE QUERY
+============================================================
+
+The NL query system must operate without SQL.
+
+The LLM/parser should convert natural language into validated structured
+filters.
+
+Example:
+
+User:
+
+"Show theft cases in Indore after 8 PM."
+
+Structured result:
+
+{
+  "state": "Madhya Pradesh",
+  "city": "Indore",
+  "crime_type": "Theft",
+  "hour_min": 20
+}
+
+The backend then applies those filters to the CSV dataset.
+
+IMPORTANT:
+
+The LLM must NOT generate SQL.
+
+There is no SQL/database query in the CSV-backed MVP.
+
+The LLM/parser only produces validated structured filters.
+
+============================================================
+PART 2 — GEOGRAPHIC MODEL
+============================================================
+
+The current frontend incorrectly uses fictional/placeholder sectors such
+as:
+
+- Central Sector
+- North Sector
+- South Sector
+- Cyber City Sector
+- West Outer Sector
+- Tech Hub Sector
+- Harbour Sector
+- East District Sector
+
+These must be completely removed from the geographic model.
+
+The application is intended for Indian crime/FIR analytics.
+
+The geographic hierarchy must become:
+
+State
+  ↓
+City
+
+Do NOT simply rename "sector" to "state".
+
+Update the underlying:
+
+- frontend state
+- frontend components
+- frontend types
+- API filters
+- backend schemas
+- backend services
+- CSV schema
+- mock/seed data
+- NL query parsing
+- documentation
+
+where necessary.
+
+============================================================
+11. INDIAN STATES AND UNION TERRITORIES
+============================================================
+
+Use actual Indian States and Union Territories.
+
+Do not use fictional geographic names.
+
+The State selector should support:
+
+- All States
+- Indian States
+- Union Territories
+
+Do not invent state names.
+
+For cities, use real Indian cities.
+
+Do NOT invent arbitrary city-to-state relationships.
+
+First inspect the existing mock data and determine whether usable geographic
+information already exists.
+
+If existing data does not contain usable State/City information, create a
+clearly documented prototype mapping using real Indian locations.
+
+Do not claim that fictional crime records represent real-world incidents.
+
+============================================================
+12. CSV GEOGRAPHIC FIELDS
+============================================================
+
+The incident CSV should use:
+
+state
+city
+
+as the primary geographic fields.
+
+Remove active sector-based geographic fields from the new model.
+
+If the existing backend uses fields such as:
+
+district
+sector
+
+determine whether they represent the old fictional geographic hierarchy.
+
+If they do, replace them appropriately with:
+
+state
+city
+
+Do NOT blindly rename fields if they have a different semantic meaning.
+
+The final application should consistently use:
+
+State → City
+
+for geographic filtering.
+
+============================================================
+13. FRONTEND LOCATION UI
+============================================================
+
+Inspect the existing Command Center / Query Scope UI.
+
+The current UI looks similar to:
+
+QUERY SCOPE:
+[ SOUTH SECTOR ▼ ]
+
+Replace it with:
+
+STATE:
+[ All States ▼ ]
+
+CITY:
+[ All Cities ▼ ]
+
+Keep the existing visual design, typography, spacing, colors, borders,
+and overall dashboard aesthetic.
+
+Do NOT redesign the entire dashboard.
+
+Only change the geographic filtering UI.
+
+============================================================
+14. DEPENDENT CITY DROPDOWN
+============================================================
+
+City must depend on the selected State.
+
+Initial state:
+
+STATE:
+[ All States ▼ ]
+
+CITY:
+[ All Cities ▼ ]
+
+If the user selects:
+
+State = Madhya Pradesh
+
+then the city dropdown should contain only cities belonging to
+Madhya Pradesh.
+
+For example:
+
+[ All Cities ▼ ]
+[ Indore ]
+[ Bhopal ]
+[ Gwalior ]
+[ Jabalpur ]
+[ Ujjain ]
+
+Use only valid city/state relationships.
+
+If the user changes State:
+
+1. Reset City to "All Cities".
+2. Recalculate the available city options.
+3. Refresh the displayed data.
+
+If "All States" is selected:
+
+City should default to "All Cities".
+
+============================================================
+15. FRONTEND TYPES
+============================================================
+
+Inspect:
+
+src/lib/types.ts
+src/lib/api.ts
+src/lib/mock-data.ts
+
+Replace sector-specific geographic types with the new State/City model
+where appropriate.
+
+The final frontend types should consistently represent:
+
+state
+city
+
+Update API request types accordingly.
+
+Do not modify unrelated types.
+
+============================================================
+16. BACKEND SCHEMAS
+============================================================
+
+Inspect:
+
+backend/app/schemas/
+backend/app/models/
+backend/app/api/
+backend/app/services/
+
+Because this MVP is now CSV-backed, do NOT create or preserve unnecessary
+database ORM models solely for geographic filtering.
+
+Use Pydantic schemas and the CSV data service.
+
+The backend should consistently support:
+
+state
+city
+
+Do not retain fictional sector assumptions.
+
+============================================================
+17. API FILTERING WITH STATE/CITY
+============================================================
+
+GET /api/incidents:
+
+Support:
+
+?state=
+?city=
+?crime_type=
+?page=
+?page_size=
+
+Examples:
+
+GET /api/incidents?state=Madhya%20Pradesh
+
+GET /api/incidents?state=Madhya%20Pradesh&city=Indore
+
+GET /api/incidents?state=Madhya%20Pradesh&city=Indore&crime_type=Theft
+
+GET /api/incidents/summary:
+
+Support:
+
+?state=
+?city=
+?crime_type=
+
+Filtering must work against the CSV-backed data service.
+
+============================================================
+18. OTHER FEATURES
+============================================================
+
+Inspect all of these for old geographic assumptions:
+
+- Command Center
+- Risk Predictor
+- Crime DNA Matcher
+- Natural Language Query
+- Decision Support
+- Decision Simulator
+
+Update geographic references where they directly depend on sectors or
+the old district/sector hierarchy.
+
+Do NOT unnecessarily rewrite the ML algorithms.
+
+============================================================
+19. SEARCH THE ENTIRE PROJECT
+============================================================
+
+Search the entire project for:
+
+sector
+Sector
+SECTOR
+Central Sector
+North Sector
+South Sector
+Cyber City
+Cyber City Sector
+Tech Hub
+Tech Hub Sector
+Harbour Sector
+West Outer Sector
+East District Sector
+
+Remove geographic sector assumptions from active application code.
+
+Do NOT remove unrelated uses of the word "sector" if it is not referring
+to geographic location.
+
+============================================================
+20. RESPONSIBLE DATA HANDLING
+============================================================
+
+Do not silently transform fictional prototype data into claims about
+real-world crime.
+
+If the existing mock records are synthetic, keep them synthetic but map
+their geographic fields to valid Indian State/City values where necessary.
+
+Do not fabricate real FIR numbers or claim fabricated incidents are
+official crime statistics.
+
+============================================================
+21. DEPENDENCIES
+============================================================
+
+Update backend/requirements.txt.
+
+Remove dependencies that are completely unused after the MySQL → CSV
+migration.
+
+The backend should retain only dependencies actually required for:
+
+- FastAPI
+- Pandas
+- NumPy
+- Scikit-learn
+- SHAP
+- Pydantic
+- LLM integration
+- model serialization
+- testing
+
+Do not remove a dependency that is still used elsewhere.
+
+============================================================
+22. APPLICATION STARTUP
+============================================================
+
+The FastAPI backend must start with only the CSV available.
+
+This should work:
+
+uvicorn app.main:app --reload --port 8000
+
+from the backend directory.
+
+It must NOT require:
+
+- MySQL
+- DATABASE_URL
+- MySQL credentials
+- database initialization
+- database seed commands
+
+If the CSV is missing, the application should produce a clear,
+actionable error.
+
+If required CSV columns are missing, the application should produce a
+clear validation error.
+
+============================================================
+23. FRONTEND STRUCTURE
+============================================================
+
+Do NOT move the frontend into a /frontend directory.
+
+Keep the existing structure:
+
+project/
+├── src/
+├── public/
+├── backend/
+├── package.json
+├── README.md
+└── ...
+
+Do not reorganize unrelated files.
+
+============================================================
+24. README
+============================================================
+
+Update README.md to reflect the actual MVP architecture.
+
+The current architecture should be documented as:
+
+Next.js
+   ↓
+FastAPI
+   ↓
+Pandas
+   ↓
+CSV
+
+The geographic model should be documented as:
+
+State → City
+
+Do NOT describe MySQL as a current runtime requirement.
+
+You may mention MySQL as a possible future production upgrade.
+
+Do not modify unrelated README content.
+
+============================================================
+25. DO NOT BREAK EXISTING FEATURES
+============================================================
+
+Do not redesign the application.
+
+Do not change:
+
+- dashboard design
+- ML algorithms
+- SHAP implementation
+- TF-IDF approach
+- simulator logic
+- unrelated frontend components
+- existing API endpoint paths
+
+Only change what is necessary for:
+
+MySQL → CSV
+
+and:
+
+Sector → State/City
+
+============================================================
+26. FINAL VERIFICATION
+============================================================
+
+After implementation, verify all of the following:
+
+BACKEND:
+
+1. FastAPI starts without MySQL.
+2. FastAPI starts using only backend/data/incidents.csv.
+3. /docs loads successfully.
+4. All 7 API endpoints are registered.
+5. GET /api/incidents works.
+6. GET /api/incidents/summary works.
+7. Pagination works.
+8. State filtering works.
+9. State + City filtering works.
+10. Crime-type filtering works.
+11. Combined filtering works.
+12. Missing CSV produces a clear error.
+13. Invalid CSV schema produces a clear error.
+
+FRONTEND:
+
+14. Frontend builds successfully.
+15. State dropdown works.
+16. City dropdown is dependent on State.
+17. Changing State resets City.
+18. State-only filtering works.
+19. State + City filtering works.
+20. No fictional sector options remain.
+21. Existing dashboard design remains intact.
+
+ML:
+
+22. Risk model training works using CSV.
+23. TF-IDF training works using CSV.
+24. ML artifacts are generated correctly.
+25. Models are not retrained on every request.
+
+INTEGRATION:
+
+26. Frontend communicates with FastAPI.
+27. Frontend request schemas match backend schemas.
+28. Response structures remain compatible with the existing frontend.
+29. No MySQL connection is required.
+30. No active geographic sector assumptions remain.
+
+============================================================
+27. IMPORTANT IMPLEMENTATION RULE
+============================================================
+
+Before modifying files:
+
+1. Inspect the existing implementation.
+2. Identify every place where MySQL/database access is used.
+3. Identify every place where sector/district geographic assumptions are used.
+4. Identify the existing frontend API contract.
+5. Reuse existing code wherever possible.
+
+Then implement the migration.
+
+Do NOT ask me unnecessary clarification questions if the existing code
+already provides the answer.
+
+Make reasonable decisions based on the current implementation.
+
+Do not make unrelated changes.
+
+============================================================
+28. FINAL REPORT
+============================================================
+
+After implementation, report:
+
+- Files created
+- Files modified
+- Files removed
+- MySQL/database code removed
+- CSV data-service implementation
+- CSV schema
+- State/City implementation
+- Frontend changes
+- Backend changes
+- API changes
+- ML training changes
+- Dependencies removed/added
+- Tests performed
+- Build results
+- Any assumptions made about the prototype data
+- Any remaining issues
+
+Most importantly:
+
+The final application must be:
+
+Next.js
+   ↓
+FastAPI
+   ↓
+CSV/Pandas
+
+with:
+
+State
+   ↓
+City
+
+and must NOT depend on MySQL or the old fictional sector system.

@@ -1,12 +1,12 @@
 export type District =
-  | 'Central'
-  | 'North'
-  | 'South'
-  | 'Cyber City'
-  | 'West Outer'
-  | 'Tech Hub'
-  | 'Harbour'
-  | 'East District';
+  | 'Bengaluru Urban'
+  | 'Mysuru'
+  | 'Mumbai'
+  | 'Pune'
+  | 'Delhi'
+  | 'Hyderabad'
+  | 'Chennai'
+  | 'Kolkata';
 
 export type CrimeType =
   | 'Cyber Fraud / Financial'

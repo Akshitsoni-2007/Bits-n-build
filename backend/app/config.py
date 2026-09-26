@@ -5,8 +5,8 @@ from typing import List
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "mysql+pymysql://USER:PASSWORD@HOST:3306/nirikshan"
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    DATA_CSV_PATH: str = "data/incidents.csv"
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     LOG_LEVEL: str = "INFO"
 
     # LLM provider (OpenAI-compatible)

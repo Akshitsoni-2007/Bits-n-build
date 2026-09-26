@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.database import get_db
 from app.schemas.risk import PredictRiskRequest, PredictRiskResponse
 from app.services.risk_model import RiskModelService
 
@@ -27,4 +25,4 @@ def predict_risk(
     except FileNotFoundError:
         raise HTTPException(status_code=503, detail="Risk model not trained. Run training script first.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Risk prediction failed")
+        raise HTTPException(status_code=500, detail=f"Risk prediction failed: {e}")

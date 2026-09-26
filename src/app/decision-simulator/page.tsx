@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { runSimulator } from '@/lib/api';
 import { SimulatorResponse } from '@/lib/types';
-import { DISTRICTS } from '@/lib/mock-data';
+import { DISTRICT_NAMES } from '@/lib/constants';
 import GuardrailDisclaimer from '@/components/GuardrailDisclaimer';
 import {
   Cpu,
@@ -28,7 +28,7 @@ const PRESET_SCENARIOS = [
 export default function DecisionSimulatorPage() {
   const [allocation, setAllocation] = useState<number>(12);
   const [scenario, setScenario] = useState<string>(PRESET_SCENARIOS[0]);
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('Cyber City');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(DISTRICT_NAMES[0]);
   const [loading, setLoading] = useState<boolean>(false);
   const [result, setResult] = useState<SimulatorResponse | null>(null);
 
@@ -114,7 +114,7 @@ export default function DecisionSimulatorPage() {
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 className="w-full px-3 py-2 rounded-[8px] bg-[#050201] border border-[#27272A] text-white font-mono focus:outline-none focus:border-[#c82a2a]"
               >
-                {DISTRICTS.map((d) => (
+                {DISTRICT_NAMES.map((d) => (
                   <option key={d} value={d}>
                     {d} Sector
                   </option>

@@ -1,14 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.incident import Incident
+from fastapi import APIRouter, Depends
+from app.services.data_service import get_data_service
 from app.schemas.nl_query import NLQueryRequest, NLQueryResponse
 from app.services.nl_parser import NLParserService
 
 router = APIRouter(prefix="/api/nl-query", tags=["nl-query"])
 
 _parser_service = None
-
 
 def get_parser_service() -> NLParserService:
     global _parser_service
@@ -20,37 +17,39 @@ def get_parser_service() -> NLParserService:
 @router.post("", response_model=NLQueryResponse)
 def nl_query(
     payload: NLQueryRequest,
-    db: Session = Depends(get_db),
     parser: NLParserService = Depends(get_parser_service),
 ):
     try:
         parsed = parser.parse(payload.query)
     except Exception:
-        # fallback empty filters
         parsed = parser.empty_filters()
 
-    # Build SQLAlchemy query from validated filters
-    query = db.query(Incident)
+    service = get_data_service()
+    
+    # Filter incidents using DataService
+    incidents, total = service.get_incidents(
+        state=parsed.state,
+        city=parsed.city,
+        district=parsed.district,
+        crime_type=parsed.crime_type,
+        page=1,
+        page_size=15,
+    )
 
-    if parsed.district:
-        query = query.filter(Incident.district == parsed.district)
-    if parsed.crime_type:
-        query = query.filter(Incident.crime_type == parsed.crime_type)
+    # Apply secondary filters if present
     if parsed.day_type == "weekend":
-        query = query.filter(Incident.is_weekend == True)
+        incidents = [i for i in incidents if i["is_weekend"]]
     elif parsed.day_type == "weekday":
-        query = query.filter(Incident.is_weekend == False)
+        incidents = [i for i in incidents if not i["is_weekend"]]
 
     if parsed.time_of_day == "night":
-        query = query.filter((Incident.hour >= 21) | (Incident.hour <= 5))
+        incidents = [i for i in incidents if i["hour"] >= 21 or i["hour"] <= 5]
     elif parsed.hour_min is not None and parsed.hour_max is not None:
-        query = query.filter(Incident.hour.between(parsed.hour_min, parsed.hour_max))
-
-    results = query.limit(15).all()
+        incidents = [i for i in incidents if parsed.hour_min <= i["hour"] <= parsed.hour_max]
 
     return NLQueryResponse(
         parsed_filters=parsed,
-        results=results,
-        interpretation_summary=f"Structured translation extracted {sum(1 for v in parsed.model_dump().values() if v)} active parametric constraints against historical dataset.",
-        matched_count=len(results),
+        results=incidents,
+        interpretation_summary=f"Structured translation extracted active parametric constraints against CSV dataset.",
+        matched_count=len(incidents),
     )

@@ -1,52 +1,24 @@
 import { Incident, District, CrimeType } from './types';
 
-export const DISTRICTS: District[] = [
-  'Central',
-  'North',
-  'South',
-  'Cyber City',
-  'West Outer',
-  'Tech Hub',
-  'Harbour',
-  'East District',
-];
+import { DISTRICTS, CRIME_TYPES, MONTHS } from './constants';
 
-export const CRIME_TYPES: CrimeType[] = [
-  'Cyber Fraud / Financial',
-  'Vehicle Theft',
-  'Burglary / Breaking-in',
-  'Robbery / Snatching',
-  'Assault / Grievous Hurt',
-  'Narcotics / NDPS',
-  'Public Nuisance & Gambling',
-];
 
-export const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+
+
 
 // Reference base coordinates (Metropolitan Grid)
 const DISTRICT_COORDS: Record<District, { lat: number; lng: number }> = {
-  Central: { lat: 28.6328, lng: 77.2197 },
-  North: { lat: 28.6942, lng: 77.2104 },
-  South: { lat: 28.5355, lng: 77.2410 },
-  'Cyber City': { lat: 28.4900, lng: 77.0880 },
-  'West Outer': { lat: 28.6500, lng: 77.0600 },
-  'Tech Hub': { lat: 28.4595, lng: 77.0266 },
-  Harbour: { lat: 28.5800, lng: 77.3100 },
-  'East District': { lat: 28.6280, lng: 77.2950 },
+  'Bengaluru Urban': { lat: 28.6328, lng: 77.2197 },
+  Mysuru: { lat: 28.6942, lng: 77.2104 },
+  Mumbai: { lat: 28.5355, lng: 77.2410 },
+  Pune: { lat: 28.4900, lng: 77.0880 },
+  Delhi: { lat: 28.6500, lng: 77.0600 },
+  Hyderabad: { lat: 28.4595, lng: 77.0266 },
+  Chennai: { lat: 28.5800, lng: 77.3100 },
+  Kolkata: { lat: 28.6280, lng: 77.2950 },
 };
+
+
 
 export const MOCK_INCIDENTS: Incident[] = [
   {
@@ -127,7 +99,7 @@ export const MOCK_INCIDENTS: Incident[] = [
   {
     fir_id: 'FIR-2024-09048',
     date: '2024-11-18',
-    district: 'Central',
+    district: 'Bengaluru Urban',
     crime_type: 'Robbery / Snatching',
     hour: 19,
     day_of_week: 'Monday',
@@ -202,7 +174,7 @@ export const MOCK_INCIDENTS: Incident[] = [
   {
     fir_id: 'FIR-2024-09120',
     date: '2024-11-23',
-    district: 'Central',
+    district: 'Bengaluru Urban',
     crime_type: 'Public Nuisance & Gambling',
     hour: 20,
     day_of_week: 'Saturday',
@@ -292,7 +264,7 @@ export const MOCK_INCIDENTS: Incident[] = [
   {
     fir_id: 'FIR-2024-09199',
     date: '2024-11-28',
-    district: 'Central',
+    district: 'Bengaluru Urban',
     crime_type: 'Cyber Fraud / Financial',
     hour: 11,
     day_of_week: 'Thursday',
@@ -412,7 +384,7 @@ export const MOCK_INCIDENTS: Incident[] = [
   {
     fir_id: 'FIR-2024-09301',
     date: '2024-12-06',
-    district: 'Central',
+    district: 'Bengaluru Urban',
     crime_type: 'Vehicle Theft',
     hour: 20,
     day_of_week: 'Friday',

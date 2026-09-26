@@ -17,7 +17,8 @@ import {
   DNAMatch,
   EvidenceItem,
 } from './types';
-import { MOCK_INCIDENTS, DISTRICTS, MONTHS } from './mock-data';
+import { MOCK_INCIDENTS } from './mock-data';
+import { DISTRICTS, MONTHS } from './constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 

@@ -1,10 +1,10 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from app.models.enums import RiskClassification
-
 
 class PredictRiskRequest(BaseModel):
-    district: str
+    state: Optional[str] = "Maharashtra"
+    city: Optional[str] = "Mumbai"
+    district: Optional[str] = None # Fallback compatibility
     crime_type: str
     month: str
     hour: int = Field(ge=0, le=23)
@@ -20,7 +20,7 @@ class ContributingFactor(BaseModel):
 
 class PredictRiskResponse(BaseModel):
     risk_score: int = Field(ge=0, le=100)
-    classification: RiskClassification
+    classification: str # "LOW" | "MODERATE" | "MODERATE-HIGH" | "HIGH"
     contributing_factors: List[ContributingFactor]
     confidence_interval: Optional[str] = None
     baseline_comparison: Optional[str] = None

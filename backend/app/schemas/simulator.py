@@ -1,11 +1,12 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
-
 class SimulatorRequest(BaseModel):
     current_allocation: int
     scenario: str
-    focus_district: Optional[str] = None
+    focus_state: Optional[str] = None
+    focus_city: Optional[str] = None
+    focus_district: Optional[str] = None # Fallback compatibility
     shift_focus: Optional[str] = None
 
 

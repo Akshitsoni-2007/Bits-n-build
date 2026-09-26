@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { getIncidentsSummary, getIncidents } from '@/lib/api';
 import { SummaryData, Incident } from '@/lib/types';
-import { DISTRICTS, CRIME_TYPES } from '@/lib/mock-data';
+import { DISTRICTS, DISTRICT_NAMES } from '@/lib/constants';
+import { CRIME_TYPES } from '@/lib/constants';
 import StatCard from '@/components/StatCard';
 import GuardrailDisclaimer from '@/components/GuardrailDisclaimer';
 import DistrictChart from '@/components/charts/DistrictChart';
@@ -121,7 +122,7 @@ export default function CommandCenterPage() {
             className="px-3 py-1.5 rounded-[8px] bg-[#050201] border border-[#27272A] text-xs font-mono text-white focus:outline-none focus:border-[#c82a2a] transition-colors"
           >
             <option value="">ALL DISTRICTS (METRO GRID)</option>
-            {DISTRICTS.map((d) => (
+            {DISTRICT_NAMES.map((d) => (
               <option key={d} value={d}>
                 {d.toUpperCase()} SECTOR
               </option>

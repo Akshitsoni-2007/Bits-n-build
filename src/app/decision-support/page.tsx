@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { analyzeDecisionSupport } from '@/lib/api';
 import { DecisionSupportResponse } from '@/lib/types';
-import { DISTRICTS, CRIME_TYPES } from '@/lib/mock-data';
+import { DISTRICTS, DISTRICT_NAMES, CRIME_TYPES } from '@/lib/constants';
 import GuardrailDisclaimer from '@/components/GuardrailDisclaimer';
 import {
   ShieldCheck,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function DecisionSupportPage() {
-  const [district, setDistrict] = useState<string>('North');
+  const [district, setDistrict] = useState<string>(DISTRICT_NAMES[0]);
   const [crimeType, setCrimeType] = useState<string>('Robbery / Snatching');
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<DecisionSupportResponse | null>(null);
@@ -77,7 +77,7 @@ export default function DecisionSupportPage() {
             onChange={(e) => setDistrict(e.target.value)}
             className="px-3 py-1.5 rounded-[8px] bg-[#050201] border border-[#27272A] text-xs font-mono text-white focus:outline-none focus:border-[#c82a2a]"
           >
-            {DISTRICTS.map((d) => (
+            {DISTRICT_NAMES.map((d) => (
               <option key={d} value={d}>
                 {d.toUpperCase()} SECTOR
               </option>

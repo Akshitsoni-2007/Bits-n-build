@@ -1,5 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel
+
+class DecisionSupportRequest(BaseModel):
+    state: Optional[str] = None
+    city: Optional[str] = None
+    district: Optional[str] = None # Fallback compatibility
+    crime_type: Optional[str] = None
 
 
 class EvidenceItem(BaseModel):

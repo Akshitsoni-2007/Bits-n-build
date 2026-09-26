@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { predictRisk } from '@/lib/api';
 import { PredictRiskResponse, RiskClassification } from '@/lib/types';
-import { DISTRICTS, CRIME_TYPES, MONTHS } from '@/lib/mock-data';
+import { DISTRICTS, DISTRICT_NAMES, CRIME_TYPES, MONTHS } from '@/lib/constants';
 import GuardrailDisclaimer from '@/components/GuardrailDisclaimer';
 import {
   Gauge,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function RiskPredictorPage() {
-  const [district, setDistrict] = useState<string>(DISTRICTS[0]);
+  const [district, setDistrict] = useState<string>(DISTRICT_NAMES[0]);
   const [crimeType, setCrimeType] = useState<string>(CRIME_TYPES[0]);
   const [month, setMonth] = useState<string>('November');
   const [hour, setHour] = useState<number>(23);
@@ -112,7 +112,7 @@ export default function RiskPredictorPage() {
                 onChange={(e) => setDistrict(e.target.value)}
                 className="w-full px-3 py-2 rounded-[8px] bg-[#050201] border border-[#27272A] text-white font-mono focus:outline-none focus:border-[#c82a2a] transition-colors"
               >
-                {DISTRICTS.map((d) => (
+                {DISTRICT_NAMES.map((d) => (
                   <option key={d} value={d}>
                     {d} Sector
                   </option>

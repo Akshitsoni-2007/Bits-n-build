@@ -38,10 +38,21 @@ export default function IncidentMapClient({
     });
 
     // Dark Matter CartoDB tiles
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-    }).addTo(map);
+    const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
+if (cartoKey) {
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${cartoKey}`, {
+    maxZoom: 19,
+    subdomains: 'abcd',
+  }).addTo(map);
+} else {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    subdomains: 'abc',
+  }).addTo(map);
+}
+  
+  
+  
 
     setMapInstance(map);
 

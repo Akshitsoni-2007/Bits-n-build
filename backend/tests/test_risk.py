@@ -1,12 +1,16 @@
-def test_predict_risk_missing_model(client):
+def test_predict_risk(client):
     payload = {
-        "district": "Cyber City",
+        "state": "Maharashtra",
+        "city": "Mumbai",
         "crime_type": "Cyber Fraud / Financial",
         "month": "November",
         "hour": 22,
         "is_weekend": True,
     }
     resp = client.post("/api/risk/predict", json=payload)
-    # Should be 503 because model not trained in test env
-    assert resp.status_code == 503
-    assert "not trained" in resp.json()["detail"].lower()
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "risk_score" in data
+    assert "classification" in data
+    assert "contributing_factors" in data
+    assert isinstance(data["contributing_factors"], list)

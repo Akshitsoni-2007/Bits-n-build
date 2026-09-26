@@ -1,5 +1,5 @@
-def test_decision_support_analyze(client, seed_incidents):
-    payload = {"district": "Cyber City", "crime_type": "Cyber Fraud / Financial"}
+def test_decision_support_analyze(client):
+    payload = {"state": "Maharashtra", "city": "Mumbai", "crime_type": "Vehicle Theft"}
     resp = client.post("/api/decision-support/analyze", json=payload)
     assert resp.status_code == 200
     data = resp.json()
