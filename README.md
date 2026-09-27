@@ -265,7 +265,7 @@ MySQL
 Initial:
 
 -   TF-IDF
--   Cosine similarity
+
 
 Possible upgrade:
 
